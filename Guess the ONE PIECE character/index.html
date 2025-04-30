@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海贼王猜角色</title>
+    <style>
+        :root {
+            --correct: #2ecc71;
+            --close: #f1c40f;
+            --wrong: #95a5a6;
+            --bg: #2c3e50;
+            --text: white;
+            --input-bg: #34495e;
+            --setting-bg: rgba(255,255,255,0.1);
+        }
+
+        [data-theme="light"] {
+            --bg: white;
+            --text: black;
+            --input-bg: white;
+            --setting-bg: rgba(0,0,0,0.1);
+        }
+
+        [data-theme="light"] .attribute-label {
+            color: var(--text) !important;
+        }
+
+        .haki-type, .devil-fruit-type {
+            background: var(--wrong) !important;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            transition: 0.3s;
+            color: white !important;
+            font-size: 0.9em;
+        }
+        .haki-correct, .devil-fruit-correct { 
+            background: var(--correct) !important;
+        }
+        .haki-container, .devil-fruit-container {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: transparent !important;
+            padding: 0;
+            border: none;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .theme-switcher {
+            position: absolute;
+            top: 20px;
+            right: 100px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .help-btn-new {
+            position: absolute;
+            top: 20px;
+            right: 140px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        #settings {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .group-type {
+    background: var(--wrong) !important; /* 保持原始错误状态颜色 */
+    padding: 2px 8px;
+    border-radius: 12px; /* 恢复圆角 */
+    margin: 2px;
+    transition: 0.3s;
+    color: white !important;
+    font-size: 0.9em;
+    border: none; /* 确保无边框 */
+}
+
+.group-correct { 
+    background: var(--correct) !important; /* 正确状态颜色 */
+}
+.group-container {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: transparent !important; /* 保持透明背景 */
+    padding: 0;
+    border: none; /* 移除边框 */
+}
+
+        .setting-group {
+            background: var(--setting-bg);
+            padding: 10px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #input-area {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        #guess-input {
+            padding: 12px;
+            width: 300px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 16px;
+            color: white;
+        }
+
+        #submit-btn { background: #27ae60; }
+        #reset-btn { background: #3498db; }
+        #surrender-btn { background: #e74c3c; }
+
+        .guess-table {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .attribute-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .attribute-label {
+            font-size: 0.9em;
+            color: #bdc3c7;
+            text-align: center;
+            padding: 4px;
+            width: 100%;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .attribute-value {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            position: relative;
+        }
+
+        .value-arrow {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            font-size: 1.2em;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .result-modal, .help-modal-new {
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        .modal-btn {
+            flex: 0 1 45%;
+            padding: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: 0.3s;
+        }
+
+        #return-btn { background: #95a5a6 !important; }
+        #reset-game { background: #27ae60 !important; }
+
+        @media (max-width: 768px) {
+        .guess-table { grid-template-columns: repeat(3, 1fr); }
+        #guess-input { width: 100%; }
+}
+        @media (min-width: 769px) {
+        .guess-table.normal { grid-template-columns: repeat(10, 1fr); } 
+        .guess-table.hard { grid-template-columns: repeat(8, 1fr); }   
+}
+
+        .attribute-column {
+        min-width: 90px;  
+}
+        .attribute-value {
+        min-height: 50px; 
+        font-size: 0.9em; 
+}
+
+        .correct { background: var(--correct); }
+        .close { background: var(--close); }
+        .near { background: var(--close); }
+        .wrong { background: var(--wrong); }
+
+        #suggestions {
+    position: absolute;
+    width: calc(300px - 4px); /* 与输入框同宽 */
+    max-height: 200px;
+    overflow-y: auto;
+    left: 0;
+    top: 100%;
+    background: var(--input-bg);
+    border: 2px solid #3498db;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text);
+    transition: 0.2s;
+    font-size: 0.95em;
+}
+
+.suggestion-item:hover {
+    background: rgba(52,152,219,0.15);
+}
+        .group-correct { 
+            background: var(--correct) !important;
+        }
+        .group-container {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: transparent !important;
+            padding: 0;
+            border: none;
+        }
+
+        .egg-btn {
+            position: absolute;
+            top: 20px;
+            right: 180px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        /* 新增彩蛋模态框样式（与帮助模态框样式一致） */
+        .egg-modal {
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="egg-btn">🥚</div>
+    <div class="help-btn-new">?</div>
+    <div class="theme-switcher">🌙</div>
+    <div class="lang-switcher">
+        <select id="lang-select">
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <h1>🏴‍☠️ 海贼王猜角色 🏴‍☠️</h1>
+        
+        <div id="settings">
+            <div class="setting-group">
+                <label>难度模式：</label>
+                <select id="difficulty-select">
+                    <option value="normal">普通模式</option>
+                    <option value="hard">困难模式</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>猜测次数：</label>
+                <select id="guess-select">
+                    <option value="5">5次</option>
+                    <option value="6">6次</option>
+                    <option value="7">7次</option>
+                    <option value="8">8次</option>
+                    <option value="9">9次</option>
+                    <option value="10">10次</option>
+                    <option value="10">11次</option>
+                    <option value="10">12次</option>
+                    <option value="10">13次</option>
+                    <option value="10">14次</option>
+                    <option value="10">15次</option>
+                    <option value="10">16次</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="input-area">
+            <div style="position: relative;">
+            <input type="text" id="guess-input" placeholder="输入角色中文名">
+            <div id="suggestions"></div> <!-- 新增联想框 -->
+            <button id="submit-btn">提交猜测</button>
+            <button id="reset-btn">重新开始</button>
+            <button id="surrender-btn">投降</button>
+        </div>
+
+        <div id="history"></div>
+        <div id="result"></div>
+    </div>
+
+    <div id="result-overlay" class="overlay">
+        <div class="result-modal">
+            <h2 id="result-title">🎉 恭喜猜中！</h2>
+            <div class="result-content">
+                <div class="role-info">
+                    <div class="info-grid">
+                        <div><span id="result-name-label">姓名：</span><span id="result-name"></span></div>
+                        <div><span id="result-gender-label">性别：</span><span id="result-gender"></span></div>
+                        <div><span id="result-height-label">身高：</span><span id="result-height"></span></div>
+                        <div><span id="result-age-label">年龄：</span><span id="result-age"></span></div>
+                        <div><span id="result-race-label">种族：</span><span id="result-race"></span></div>
+                        <div><span id="result-bounty-label">赏金：</span><span id="result-bounty"></span></div>
+                        <div><span id="result-haki-label">霸气：</span><span id="result-haki"></span></div>
+                        <div><span id="result-devilfruit-label">恶魔果实：</span><span id="result-devilfruit"></span></div>
+                        <div><span id="result-group-label">阵营：</span><span id="result-group"></span></div>
+                        <div><span id="result-debut-label">初登场：</span><span id="result-debut"></span></div>
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button id="return-btn" class="modal-btn">返回游戏</button>
+                    <button id="reset-game" class="modal-btn">重新开始</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="egg-overlay" class="overlay">
+        <div class="egg-modal">
+            <h3 id="egg-title"></h3>
+            <div id="egg-content" style="white-space: pre-line;"></div>
+            <div class="button-container">
+                <button class="modal-btn" onclick="document.getElementById('egg-overlay').style.display='none'" 
+                        style="background: var(--wrong);">
+                    {{关闭}}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="help-new-overlay" class="overlay">
+        <div class="help-modal-new">
+            <h3 id="help-new-title"></h3>
+            <div id="help-new-content" style="white-space: pre-line;"></div>
+            <div class="button-container">
+                <button class="modal-btn" onclick="document.getElementById('help-new-overlay').style.display='none'" 
+                        style="background: var(--wrong);">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const lang = {
+            zh: {
+                title: "🏴‍☠️ 海贼王猜角色 🏴‍☠️",
+                difficulty: "难度模式",
+                attempts: "猜测次数",
+                placeholder: "输入角色全名",
+                submit: "提交猜测",
+                reset: "重新开始",
+                notFound: "角色不存在",
+                guessed: "已猜过该角色",
+                win: "🎉 恭喜猜中！剩余次数：",
+                lose: "💀 游戏结束！正确答案：",
+                resultTitle: "🎉 恭喜猜中！",
+                returnBtn: "返回游戏",
+                resetBtn: "重新开始",
+                eggTitle: "关于本游戏",
+                eggContent: `海贼王版“弗一把”上线啦！
+楼主将生命卡主卡中共432位角色收集进“庞克记录”，题库充足，可尽情享受猜谜乐趣。
+
+如发现bug、错误信息或有改进意见，请通过以下链接向作者反馈
+作者b站：https://space.bilibili.com/73230119?spm_id_from=333.1007.0.0
+或加qq群讨论：112897239
+灵感来源：https://blast.tv/counter-strikle/daily
+灵感来源：http://1.14.255.210:888/#/`,
+close: "关闭",
+                helpTitle: "玩法说明",
+                helpContent: `游戏目标：通过输入海贼王角色全名进行猜测，找出目标角色。每次猜测后，你将获得输入角色的相关信息，帮助你逐步接近答案。
+
+提示颜色说明：
+
+绿色
+表示该信息与目标角色信息完全相同。
+
+黄色
+表示该信息与目标角色信息接近但不完全相同。
+黄色触发条件：
+身高、年龄、初登场话数等数据差距在10以内。
+
+灰色
+表示该信息与目标角色信息完全不同。
+
+上下箭头的作用：
+
+在身高、年龄、初登场话数等数值类信息中，箭头提示你猜测的方向是否正确：
+
+↑：表示你输入的数值低于目标角色的数值，建议下次猜测选择该数值更高的角色。
+↓：表示你输入的数值高于目标角色的数值，建议下次猜测选择该数值更低的角色。`,
+                attributes: {
+                    name: "姓名",
+                    gender: "性别",
+                    height: "身高(cm)",
+                    age: "年龄",
+                    race: "种族",
+                    bounty: "赏金",
+                    haki: "霸气",
+                    devilFruit: "恶魔果实",
+                    group: "阵营",
+                    debut: "初登场"
+                },
+                hakiTypes: ["武装色", "见闻色", "霸王色"],
+                devilFruitTypes: ["超人系", "动物系", "自然系"],
+                groupTypes: ["海贼", "海军", "革命军", "世界政府", "王下七武海",  "极恶世代", "天龙人", "王室", "科学家", "市民","战士"]
+            },
+            ja: {
+                title: "🏴‍☠️ ワンピースキャラクタークイズ 🏴‍☠️",
+                difficulty: "難易度",
+                attempts: "挑戦回数",
+                placeholder: "キャラクターのフルネームを入力",
+                submit: "送信",
+                reset: "再開",
+                notFound: "キャラクターが見つかりません",
+                guessed: "既に推測済みです",
+                win: "🎉 正解！残り試行回数：",
+                lose: "💀 ゲームオーバー！正解は：",
+                resultTitle: "🎉 正解です！",
+                returnBtn: "ゲームに戻る",
+                resetBtn: "再開する",
+                eggTitle: "ゲームについて",
+                eggContent: `ONE PIECE版「フレーバー」リリース！
+432体のキャラクターを「パンクレコード」に収録、豊富な問題数で謎解きを楽しめます。
+
+不具合や誤情報、改善意見がありましたら以下から連絡ください
+作者b站：https://space.bilibili.com/73230119?spm_id_from=333.1007.0.0
+QQグループ：112897239
+灵感来源：https://blast.tv/counter-strikle/daily
+灵感来源：http://1.14.255.210:888/#/`,
+close: "閉じる",
+                helpTitle: "遊び方説明",
+                helpContent: `ゲーム目的：ONE PIECEキャラクターのフルネームを入力して正解を当ててください。各推測後にヒント情報が表示されます。
+
+色の説明：
+
+緑色
+完全一致する情報
+
+黄色
+近似しているが完全一致しない情報
+黄色の条件：
+身長、年齢、初登場話数などの数値差が10以内
+
+灰色
+不一致な情報
+
+矢印の意味：
+
+数値情報（身長、年齢、初登場話数など）における方向指示：
+
+↑：入力値が目標値より小さい（次はより高い数値のキャラを推測）
+↓：入力値が目標値より大きい（次はより低い数値のキャラを推測）`,
+                attributes: {
+                    name: "名前",
+                    gender: "性別",
+                    height: "身長(cm)",
+                    age: "年齢",
+                    race: "種族",
+                    bounty: "懸賞金",
+                    haki: "覇気",
+                    devilFruit: "悪魔の実",
+                    group: "所属",
+                    debut: "初登場"
+                },
+                hakiTypes: ["武装色", "見聞色", "覇王色"],
+                devilFruitTypes: ["超人系", "動物系", "自然系"],
+                groupTypes: ["海賊", "海軍", "革命軍", "世界政府", "王下七武海", "最悪の世代","天竜人", "王家", "科学班", "市民","戦う者達"]
+            },
+            en: {
+                title: "🏴‍☠️ Guess the ONE PIECE character 🏴‍☠️",
+                difficulty: "Difficulty",
+                attempts: "Attempts",
+                placeholder: "Enter character full name",
+                submit: "Submit",
+                reset: "Reset",
+                notFound: "Character not found",
+                guessed: "Already guessed",
+                win: "🎉 Correct! Remaining: ",
+                lose: "💀 Game Over! Answer: ",
+                resultTitle: "🎉 Congratulations!",
+                returnBtn: "Return",
+                resetBtn: "Restart",
+                eggTitle: "About the Game",
+                eggContent: `"One Piece" version launched!
+Contains 432 characters from the official Vivre Cards, providing endless guessing fun.
+
+Report bugs, errors or suggestions:
+Author Bilibili: https://space.bilibili.com/73230119?spm_id_from=333.1007.0.0
+QQ Group: 112897239
+Inspiration: https://blast.tv/counter-strikle/daily
+Inspiration: http://1.14.255.210:888/#/`,
+close: "Close",
+                helpTitle: "How to Play",
+                helpContent: `Objective: Guess the correct ONE PIECE character by entering full names. Get hints after each guess.
+
+Color Guide:
+
+Green
+Exact match with target character
+
+Yellow
+Close but not exact match
+Yellow triggers when:
+Numeric differences (height, age, debut chapter) within 10
+
+Gery
+Inexact mismatch from target character
+
+Arrow Meanings:
+
+For numeric attributes (height, age, debut chapter):
+
+↑: Your guess is lower than target value (try higher values next)
+↓: Your guess is higher than target value (try lower values next)`,
+                attributes: {
+                    name: "Name",
+                    gender: "Gender",
+                    height: "Height(cm)",
+                    age: "Age",
+                    race: "Race",
+                    bounty: "Bounty",
+                    haki: "Haki",
+                    devilFruit: "Devil Fruit",
+                    group: "Group",
+                    debut: "Debut"
+                },
+                hakiTypes: ["Armament", "Observation", "Conqueror's"],
+                devilFruitTypes: ["Paramecia", "Zoan", "Logia"],
+                groupTypes: ["Pirates", "Marine", "Revolutionary", "World Government", "Shichibukai", "Worst Generation", "World Nobles", "Royal", "Scientist", "Citizen","Warrior"]
+            }
+        };
+
+        let characters = []; // 声明空数组用于后续加载JSON数据
+
+        let currentLang = 'zh';
+        let target, maxGuesses, remaining, difficulty;
+        const guessed = [];
+        let streak = 0;
+
+        function getSimilarity(a, b) {
+    const longer = a.length > b.length ? a : b;
+    const shorter = a.length > b.length ? b : a;
+    const threshold = 0.2;
+
+    // 完全包含匹配
+    if (longer.includes(shorter)) return 1;
+    
+    // 长度相似度
+    const lengthRatio = shorter.length / longer.length;
+    return lengthRatio >= threshold ? lengthRatio : 0;
+}
+
+        function getLocalizedText(obj) {
+            return obj[currentLang] || obj.zh || obj;
+        }
+// 新增JSON加载函数（在initialize函数前添加）
+async function loadCharacters() {
+    try {
+        const response = await fetch('characters.json');
+        characters = await response.json();
+        initialize(); // 数据加载完成后初始化游戏
+    } catch (error) {
+        console.error('加载角色数据失败:', error);
+        alert('角色数据加载失败，请检查控制台！');
+    }
+}
+function getInitial(name) {
+    if (/^[\u4e00-\u9fa5]/.test(name)) { // 中文
+        return name.charAt(0);
+    } else if (/^[a-zA-Z]/.test(name)) { // 英文
+        return name.charAt(0).toUpperCase();
+    } else if (/^[\u3040-\u309F]/.test(name)) { // 日文平假名
+        return name.charAt(0);
+    } else if (/^[\u30A0-\u30FF]/.test(name)) { // 日文片假名
+        return name.charAt(0);
+    }
+    return '';
+}
+        function initialize() {
+            target = characters[Math.floor(Math.random() * characters.length)];
+            difficulty = document.getElementById('difficulty-select').value;
+            maxGuesses = parseInt(document.getElementById('guess-select').value);
+            remaining = maxGuesses;
+            guessed.length = 0;
+            document.getElementById('history').innerHTML = '';
+            document.getElementById('result').textContent = '';
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('result-overlay').style.display = 'none';
+            updateTranslations();
+            let timeout;
+    document.getElementById('guess-input').addEventListener('input', function(e) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => showSuggestions(e.target.value), 200);
+    });
+            // 新增输入联想功能
+            function showSuggestions(input) {
+    const suggestionsEl = document.getElementById('suggestions');
+    if (!input || input.length < 1) {
+        suggestionsEl.style.display = 'none';
+        return;
+    }
+
+    const inputLower = input.toLowerCase().trim();
+    
+    // 首字母匹配逻辑
+    const suggestions = characters.flatMap(char => {
+        const localizedName = getLocalizedText(char.name);
+        const localizedAliases = getLocalizedText(char.alias) || [];
+        
+        return [
+            localizedName,
+            ...localizedAliases
+        ].filter(n => n)
+         .map(name => ({
+            name,
+            // 首字母匹配检查
+            match: name.toLowerCase().startsWith(inputLower)
+        }));
+    })
+    .filter((item, index, self) =>
+        self.findIndex(t => t.name === item.name) === index
+    )
+    .filter(item => item.match) // 仅保留首字母匹配项
+    .slice(0, 5);
+
+    // 渲染建议（保持原有逻辑不变）
+    suggestionsEl.innerHTML = suggestions.map(item => `
+        <div class="suggestion-item" 
+             data-value="${item.name}"
+             onclick="this.parentElement.style.display='none';
+                      document.getElementById('guess-input').value='${item.name}'">
+            ${item.name}
+        </div>
+    `).join('');
+
+    suggestionsEl.style.display = suggestions.length > 0 ? 'block' : 'none';
+}
+        }
+
+        function updateTranslations() {
+            const labels = lang[currentLang];
+            document.querySelector('h1').textContent = labels.title;
+            document.querySelectorAll('.setting-group label')[0].textContent = labels.difficulty + (currentLang === 'zh' ? '：' : ':');
+            document.querySelectorAll('.setting-group label')[1].textContent = labels.attempts + (currentLang === 'zh' ? '：' : ':');
+            
+            const exampleName = getLocalizedText(characters[0].name);
+            const exampleText = currentLang === 'en' ? 'e.g. ' : currentLang === 'ja' ? '例：' : '例如：';
+            document.getElementById('guess-input').placeholder = `${labels.placeholder}（${exampleText}${exampleName}）`;
+            
+            document.getElementById('submit-btn').textContent = labels.submit;
+            document.getElementById('reset-btn').textContent = labels.reset;
+            document.getElementById('surrender-btn').textContent = currentLang === 'en' ? 'Surrender' : currentLang === 'ja' ? '降参' : '投降';
+            
+            const attrs = labels.attributes;
+            document.getElementById('result-name-label').textContent = attrs.name + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-gender-label').textContent = attrs.gender + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-height-label').textContent = attrs.height + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-age-label').textContent = attrs.age + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-race-label').textContent = attrs.race + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-bounty-label').textContent = attrs.bounty + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-haki-label').textContent = attrs.haki + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-devilfruit-label').textContent = attrs.devilFruit + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-group-label').textContent = attrs.group + (currentLang === 'zh' ? '：' : ':');
+            document.getElementById('result-debut-label').textContent = attrs.debut + (currentLang === 'zh' ? '：' : ':');
+        }
+
+        function checkGuess() {
+            const input = document.getElementById('guess-input').value.trim();
+            if (!input) return;
+
+            const guess = characters.find(c => 
+    Object.values(c.name).some(name => 
+        name.toLowerCase().trim() === input.toLowerCase().trim()
+    )
+);
+
+            if (!guess) {
+                alert(lang[currentLang].notFound);
+                return;
+            }
+            if (guessed.some(c => c.name.zh === guess.name.zh)) {
+                alert(lang[currentLang].guessed);
+                return;
+                let attributes;
+            if (difficulty === 'normal') {
+            attributes = ['name', 'gender', 'height', 'age', 'race', 'bounty', 'haki', 'devilFruit', 'group', 'debut'];
+            } else {
+            attributes = ['name', 'gender', 'race', 'bounty', 'haki', 'devilFruit', 'group', 'debut']; 
+    }
+
+    
+
+    
+            const row = document.createElement('div');
+            row.className = `guess-table ${difficulty}`;
+    
+            attributes.forEach(attr => {
+        const col = document.createElement('div');
+        col.className = 'attribute-column';
+        
+        const label = document.createElement('div');
+        label.className = 'attribute-label';
+        label.textContent = lang[currentLang].attributes[attr];
+        col.appendChild(label);
+
+        const valueContainer = document.createElement('div');
+        valueContainer.className = 'attribute-value';
+
+        // 阵营特殊处理
+        if (attr === 'group') {
+                    valueContainer.style.background = 'transparent';
+                    
+                    // 获取标准化数据
+                    const guessGroups = getLocalizedText(guess.group) || [];
+                    const targetGroups = getLocalizedText(target.group) || [];
+
+                    // 创建标签容器
+                    const container = document.createElement('div');
+                    container.className = 'group-container';
+                    
+                    // 生成独立标签
+                    guessGroups.forEach(group => {
+                        const tag = document.createElement('div');
+                        tag.className = 'group-type';
+                        
+                        // 精确匹配逻辑
+                        if (targetGroups.includes(group)) {
+                            tag.classList.add('group-correct');
+                        }
+                        
+                        tag.textContent = group;
+                        container.appendChild(tag);
+                    });
+
+                    // 空状态不显示内容
+                    if (container.children.length === 0) {
+                        const emptySpan = document.createElement('span');
+                        emptySpan.style.display = 'none'; // 不显示"无"
+                        container.appendChild(emptySpan);
+                    }
+
+                    valueContainer.appendChild(container);
+                    col.appendChild(valueContainer);
+                    row.appendChild(col);
+                    return;
+                }
+            });
+
+            }
+
+            guessed.push(guess);
+            remaining--;
+            
+            const row = document.createElement('div');
+            row.className = `guess-table ${difficulty}`;
+            
+            const attributes = ['name', 'gender', 'height', 'age', 'race', 'bounty', 'haki', 'devilFruit', 'group', 'debut'];
+            attributes.forEach(attr => {
+                const col = document.createElement('div');
+                col.className = 'attribute-column';
+                
+                const label = document.createElement('div');
+                label.className = 'attribute-label';
+                label.textContent = lang[currentLang].attributes[attr];
+                col.appendChild(label);
+
+                const valueContainer = document.createElement('div');
+                valueContainer.className = 'attribute-value';
+                
+                let guessValue = guess[attr];
+                let targetValue = target[attr];
+                let statusClass = 'wrong';
+                let arrow = '';
+
+                if (attr === 'haki' || attr === 'devilFruit' || attr === 'group') { // 新增group判断
+    const container = document.createElement('div');
+    
+    // 根据属性类型选择容器样式
+    container.className = attr === 'group' ? 'group-container' : 
+                         attr === 'haki' ? 'haki-container' : 'devil-fruit-container';
+    
+    // 获取标准化数据（支持多语言）
+    const guessTypes = getLocalizedText(guess[attr]) || [];
+    const targetTypes = getLocalizedText(target[attr]) || [];
+
+    // 生成独立标签
+    guessTypes.forEach(type => {
+        const pill = document.createElement('div');
+        
+        // 设置标签基础样式
+        pill.className = attr === 'haki' ? 'haki-type' :
+                        attr === 'devilFruit' ? 'devil-fruit-type' : 
+                        'group-type'; // 新增阵营样式
+        
+        // 匹配检查逻辑
+        if (targetTypes.includes(type)) {
+            pill.classList.add(attr === 'haki' ? 'haki-correct' :
+                             attr === 'devilFruit' ? 'devil-fruit-correct' : 
+                             'group-correct'); // 新增阵营正确状态
+        }
+        
+        pill.textContent = type;
+        container.appendChild(pill);
+    });
+
+                    valueContainer.appendChild(container);
+                    valueContainer.style.background = 'transparent';
+                } else {
+                    if (typeof guessValue === 'number' && typeof targetValue === 'number') {
+                        if (guessValue === targetValue) {
+                            statusClass = 'correct';
+                        } else {
+                            arrow = guessValue < targetValue ? '↑' : '↓';
+                            const diff = Math.abs(guessValue - targetValue);
+                            statusClass = diff <= 10 ? 'close' : 'wrong';
+                        }
+                    } else if (getLocalizedText(guess[attr]) === getLocalizedText(target[attr])) {
+                        statusClass = 'correct';
+                    }
+                    
+                    const valueSpan = document.createElement('span');
+                    valueSpan.textContent = attr === 'bounty' ? 
+                        `${guessValue.toLocaleString()}฿` : 
+                        getLocalizedText(guess[attr]);
+                    valueContainer.appendChild(valueSpan);
+                    
+                    if (arrow) {
+                        const arrowSpan = document.createElement('span');
+                        arrowSpan.className = 'value-arrow';
+                        arrowSpan.textContent = arrow;
+                        valueContainer.appendChild(arrowSpan);
+                    }
+                }
+
+                valueContainer.classList.add(statusClass);
+                col.appendChild(valueContainer);
+                row.appendChild(col);
+            });
+
+            document.getElementById('history').appendChild(row);
+            document.getElementById('guess-input').value = '';
+
+            if (guess.name.zh === target.name.zh) {
+                showResult(true);
+            } else if (remaining <= 0) {
+                showResult(false);
+            }
+        }
+
+        function showResult(isWin, isSurrender = false) {
+            const modal = document.getElementById('result-overlay');
+            const labels = lang[currentLang];
+            
+            if (isSurrender) {
+                document.getElementById('result-title').textContent = "💀 " + (currentLang === 'en' ? 'Surrendered!' : 
+                                    currentLang === 'ja' ? '降参しました！' : '已投降！');
+            } else if (isWin) {
+                document.getElementById('result-title').textContent = labels.resultTitle;
+                streak++;
+            } else {
+                document.getElementById('result-title').textContent = labels.lose + getLocalizedText(target.name);
+                streak = 0;
+            }
+
+            document.getElementById('result-name').textContent = getLocalizedText(target.name);
+            document.getElementById('result-gender').textContent = getLocalizedText(target.gender);
+            document.getElementById('result-height').textContent = target.height;
+            document.getElementById('result-age').textContent = target.age;
+            document.getElementById('result-race').textContent = getLocalizedText(target.race);
+            document.getElementById('result-bounty').textContent = `${target.bounty.toLocaleString()}฿`;
+            document.getElementById('result-haki').textContent = getLocalizedText(target.haki).join(', ') || 
+                (currentLang === 'en' ? 'None' : currentLang === 'ja' ? '無し' : '无');
+            document.getElementById('result-devilfruit').textContent = getLocalizedText(target.devilFruit).join(', ') || 
+                (currentLang === 'en' ? 'None' : currentLang === 'ja' ? '無し' : '无');
+            document.getElementById('result-group').textContent = getLocalizedText(target.group);
+            document.getElementById('result-debut').textContent = target.debut;
+
+            modal.style.display = 'flex';
+            document.getElementById('submit-btn').disabled = true;
+        }
+
+        // 事件监听
+        document.getElementById('lang-select').addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            localStorage.setItem('preferredLang', currentLang);
+            initialize();
+        });
+        document.addEventListener('click', function(e) {
+    const suggestions = document.getElementById('suggestions');
+    const input = document.getElementById('guess-input');
+    
+    if (!e.target.closest('#suggestions') && 
+        !e.target.closest('#guess-input')) {
+        suggestions.style.display = 'none';
+    }
+});
+
+// 键盘导航支持
+document.getElementById('guess-input').addEventListener('keydown', function(e) {
+    const items = document.querySelectorAll('.suggestion-item');
+    if (!items.length) return;
+
+    const focused = document.querySelector('.suggestion-item:hover');
+    
+    switch(e.key) {
+        case 'ArrowDown':
+            e.preventDefault();
+            if (!focused) items[0].focus();
+            else if (focused.nextSibling) focused.nextSibling.focus();
+            break;
+        case 'ArrowUp':
+            e.preventDefault();
+            if (focused && focused.previousSibling) {
+                focused.previousSibling.focus();
+            }
+            break;
+        case 'Enter':
+            if (focused) {
+                this.value = focused.dataset.value;
+                document.getElementById('suggestions').style.display = 'none';
+            }
+            break;
+    }
+});
+        document.querySelector('.theme-switcher').addEventListener('click', () => {
+            const isLight = document.body.getAttribute('data-theme') === 'light';
+            document.body.setAttribute('data-theme', isLight ? '' : 'light');
+            document.querySelector('.theme-switcher').textContent = isLight ? '🌙' : '☀️';
+        });
+
+        document.querySelector('.help-btn-new').addEventListener('click', () => {
+            document.getElementById('help-new-overlay').style.display = 'flex';
+            document.getElementById('help-new-title').textContent = lang[currentLang].helpTitle;
+            document.getElementById('help-new-content').textContent = lang[currentLang].helpContent;
+        });
+
+        document.getElementById('surrender-btn').addEventListener('click', () => {
+            showResult(false, true);
+        });
+        // 输入框输入事件监听
+document.getElementById('guess-input').addEventListener('input', function(e) {
+    showSuggestions(e.target.value);
+});
+
+// 点击建议项事件监听
+document.getElementById('suggestions').addEventListener('click', function(e) {
+    if (e.target.classList.contains('suggestion-item')) {
+        document.getElementById('guess-input').value = e.target.dataset.value;
+        this.style.display = 'none';
+    }
+});
+        // 添加彩蛋按钮事件监听
+document.querySelector('.egg-btn').addEventListener('click', () => {
+            document.getElementById('egg-overlay').style.display = 'flex';
+            document.getElementById('egg-title').textContent = lang[currentLang].eggTitle;
+            document.getElementById('egg-content').textContent = lang[currentLang].eggContent;
+        });
+
+// 新初始化代碼
+const savedLang = localStorage.getItem('preferredLang') || 'zh';
+document.getElementById('lang-select').value = savedLang;
+currentLang = savedLang;
+loadCharacters(); // 改為加載JSON數據
+
+        document.getElementById('submit-btn').addEventListener('click', checkGuess);
+        document.getElementById('reset-btn').addEventListener('click', initialize);
+        document.getElementById('guess-input').addEventListener('keypress', e => {
+            if (e.key === 'Enter') checkGuess();
+        });
+        document.getElementById('reset-game').addEventListener('click', () => {
+            document.getElementById('result-overlay').style.display = 'none';
+            initialize();
+        });
+        document.getElementById('return-btn').addEventListener('click', () => {
+            document.getElementById('result-overlay').style.display = 'none';
+        });
+        
+    </script>
+</body>
+</html>
